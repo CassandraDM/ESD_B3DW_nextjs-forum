@@ -1,4 +1,4 @@
-import MessageList from "@/components/app/messages/MessageList";
+import MessageList from "@/components/app/message/MessageList";
 
 export default async function ConversationDetailPage({
   params,
@@ -16,7 +16,7 @@ export default async function ConversationDetailPage({
       <h1>{conversation?.title}</h1>
 
       <div>
-        <MessageList />
+        <MessageList conversationId={params.id} />
       </div>
     </div>
   );
