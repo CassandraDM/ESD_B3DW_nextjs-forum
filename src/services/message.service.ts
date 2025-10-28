@@ -39,7 +39,7 @@ export async function createMessage(messageDTO: MessageDTO) {
   return response.json();
 }
 
-export async function deleteMessage(id: string) {
+export async function deleteById(id: string) {
   const response = await fetch(`/api/messages/${id}`, {
     method: "DELETE",
   });
@@ -52,7 +52,7 @@ export async function deleteMessage(id: string) {
 const MessageService = {
   fetchMessages,
   createMessage,
-  deleteMessage,
+  deleteById,
 };
 
 export default MessageService;

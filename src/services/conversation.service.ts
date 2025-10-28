@@ -14,9 +14,20 @@ async function fetchConversationById(id: string) {
   return response.json();
 }
 
+async function deleteById(id: string) {
+  const response = await fetch(`/api/conversations/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new Error("Failed to delete conversation");
+  }
+  return response.json();
+}
+
 const ConversationService = {
   fetchConversations,
   fetchConversationById,
+  deleteById,
 };
 
 export default ConversationService;

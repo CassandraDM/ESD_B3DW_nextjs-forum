@@ -20,3 +20,15 @@ export async function GET(
 
   return NextResponse.json(conversation);
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  const conversation = await prisma.conversation.delete({
+    where: { id },
+  });
+  return NextResponse.json(conversation);
+}

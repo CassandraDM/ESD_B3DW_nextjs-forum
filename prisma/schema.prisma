@@ -37,7 +37,7 @@ model Message {
   deletedAt  DateTime?
   archivedAt DateTime?
 
-  Conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  Conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   conversationId String?
 
   @@map("message")
