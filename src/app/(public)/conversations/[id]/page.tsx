@@ -24,7 +24,7 @@ export default async function ConversationDetailPage({
         </Link>
       </div>
 
-      <div className="bg-amber-100 p-4 rounded-md text-xl flex items-center gap-2">
+      <div className="p-4 rounded-md text-xl flex items-center gap-2">
         Subject:
         <h1>{conversation?.title}</h1>
       </div>
