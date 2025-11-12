@@ -21,6 +21,7 @@ import Link from "next/link";
 
 interface AuthFormProps {
   variant: "signup" | "signin";
+  callbackUrl?: string;
 }
 
 interface SignUpFormData {
@@ -34,7 +35,7 @@ interface SignInFormData {
   password: string;
 }
 
-export function AuthForm({ variant }: AuthFormProps) {
+export function AuthForm({ variant, callbackUrl = "/" }: AuthFormProps) {
   const router = useRouter();
   const isSignUp = variant === "signup";
 
@@ -82,7 +83,7 @@ export function AuthForm({ variant }: AuthFormProps) {
     },
     onSuccess: () => {
       toast.success("Connexion réussie !");
-      router.push("/");
+      router.push(callbackUrl);
       router.refresh();
     },
     onError: (error: Error) => {

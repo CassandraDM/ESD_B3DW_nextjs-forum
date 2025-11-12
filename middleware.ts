@@ -6,6 +6,13 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isAuthenticated = !!req.auth;
 
+  console.log(
+    "[Middleware] Path:",
+    pathname,
+    "Authenticated:",
+    isAuthenticated
+  );
+
   // Routes publiques qui ne nécessitent pas d'authentification
   const publicRoutes = ["/", "/signin", "/signup", "/conversations"];
   const isPublicRoute = publicRoutes.some(
@@ -14,6 +21,7 @@ export default auth((req) => {
 
   // Routes protégées (nécessitent une authentification)
   // - /account : Page de profil utilisateur
+  // Note: Les route groups (private) ne sont pas dans l'URL, donc /account est directement accessible
   // Note: La protection des routes API (POST /api/conversations, POST /api/messages)
   // sera gérée directement dans les route handlers (voir étape 3 du README)
   const protectedRoutes = ["/account"];
@@ -21,9 +29,12 @@ export default auth((req) => {
     pathname.startsWith(route)
   );
 
+  console.log("[Middleware] Is protected route:", isProtectedRoute);
+
   // Si c'est une route protégée et que l'utilisateur n'est pas authentifié
   if (isProtectedRoute && !isAuthenticated) {
-    // Rediriger vers la page de connexion avec callbackUrl
+    console.log("[Middleware] Redirecting to /signin");
+    // Rediriger vers la page de connexion avec callbackUrl pour revenir après connexion
     const signInUrl = new URL("/signin", req.url);
     signInUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(signInUrl);
