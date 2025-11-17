@@ -9,6 +9,9 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/useSession";
 import { useRouter } from "next/navigation";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import Link from "next/link";
+import { Info } from "lucide-react";
 
 interface ConversationFormData {
   title: string;
@@ -69,21 +72,21 @@ export default function ConversationForm() {
   if (!isAuthenticated) {
     return (
       <div className="mb-4">
-        <div className="relative blur-sm">
-          <Input
-            type="text"
-            placeholder="Titre de la nouvelle conversation..."
-            className="py-6"
-            disabled
-          />
-          <Button
-            type="button"
-            className="absolute top-1/2 right-0 -translate-y-1/2 mr-2"
-            disabled
-          >
-            Créer
-          </Button>
-        </div>
+        <Alert variant="destructive" className="mb-4">
+          <Info />
+          <AlertTitle>Authentification requise</AlertTitle>
+          <AlertDescription className="flex flex-col gap-3 mt-2">
+            <p>Vous devez être connecté pour créer une conversation.</p>
+            <div className="flex gap-2">
+              <Button asChild size="sm" variant="outline">
+                <Link href="/signin">Se connecter</Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/signup">Créer un compte</Link>
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }

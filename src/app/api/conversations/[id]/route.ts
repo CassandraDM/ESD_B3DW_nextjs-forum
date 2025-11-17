@@ -6,12 +6,8 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Vérifier l'authentification - les GET nécessitent une connexion
-  const authError = await requireAuth();
-  if (authError) {
-    return authError;
-  }
-
+  // GET reste public pour la lecture (affichage d'une conversation)
+  // Les modifications (DELETE, PATCH) nécessitent une authentification
   const { id } = await params;
 
   const conversation = await prisma.conversation.findUnique({

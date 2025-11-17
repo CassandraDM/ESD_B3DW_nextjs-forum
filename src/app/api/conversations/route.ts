@@ -4,12 +4,8 @@ import { NextRequest } from "next/server";
 import { getSession, requireAuth } from "@/lib/auth-utils";
 
 export async function GET() {
-  // Vérifier l'authentification - les GET nécessitent une connexion
-  const authError = await requireAuth();
-  if (authError) {
-    return authError;
-  }
-
+  // GET reste public pour la lecture (affichage des conversations)
+  // Les modifications (POST, DELETE, PATCH) nécessitent une authentification
   const conversations = await prisma.conversation.findMany({
     include: {
       messages: {

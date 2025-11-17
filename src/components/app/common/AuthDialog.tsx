@@ -26,19 +26,13 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           <AlertDialogTitle>Authentification requise</AlertDialogTitle>
           <AlertDialogDescription>
             Vous devez être connecté pour accéder aux conversations.
-            Souhaitez-vous vous connecter ou créer un compte ?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <Button asChild variant="outline">
+          <Button asChild>
             <Link href="/signin" onClick={() => onOpenChange(false)}>
               Se connecter
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/signup" onClick={() => onOpenChange(false)}>
-              Créer un compte
             </Link>
           </Button>
         </AlertDialogFooter>

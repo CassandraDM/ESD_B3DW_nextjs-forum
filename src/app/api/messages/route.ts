@@ -3,12 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession, requireAuth } from "@/lib/auth-utils";
 
 export async function GET(request: NextRequest) {
-  // Vérifier l'authentification - les GET nécessitent une connexion
-  const authError = await requireAuth();
-  if (authError) {
-    return authError;
-  }
-
+  // GET reste public pour la lecture (affichage des messages)
+  // Les modifications (POST, DELETE, PATCH) nécessitent une authentification
   const { searchParams } = new URL(request.url);
 
   const whereClause = { deletedAt: null };
