@@ -30,7 +30,14 @@ export default function MessageItem({ message }: MessageItemProps) {
           id={message.id}
         />
       )}
-      {message.content}
+      <div className="flex flex-col gap-2">
+        {message.author && (
+          <p className="text-sm font-medium text-muted-foreground">
+            {message.author.name || message.author.email}
+          </p>
+        )}
+        <p>{message.content}</p>
+      </div>
     </div>
   );
 }

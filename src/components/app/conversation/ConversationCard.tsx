@@ -34,7 +34,16 @@ export default function ConversationCard({
       className="cursor-pointer hover:shadow-md transition-all"
       onClick={handleCardClick}
     >
-      <CardContent>{conversation?.title}</CardContent>
+      <CardContent>
+        <div className="flex flex-col gap-2">
+          <div>{conversation?.title}</div>
+          {conversation?.author && (
+            <p className="text-sm text-muted-foreground">
+              Par {conversation.author.name || conversation.author.email}
+            </p>
+          )}
+        </div>
+      </CardContent>
       <CardFooter className="w-full flex justify-between ">
         <p className="text-sm italic text-zinc-500">
           {getRelativeTime(conversation.createdAt)}
