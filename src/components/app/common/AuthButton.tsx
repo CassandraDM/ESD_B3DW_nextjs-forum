@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useSession } from "@/hooks/useSession";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import Link from "next/link";
+import { User } from "lucide-react";
 
 export default function AuthButton() {
   const router = useRouter();
@@ -44,9 +46,13 @@ export default function AuthButton() {
   if (isAuthenticated && session?.user) {
     return (
       <div className="flex items-center gap-4">
-        <span className="text-sm text-muted-foreground">
+        <Link
+          href={`/users/${session.user.id}`}
+          className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+        >
+          <User className="h-4 w-4" />
           {session.user.name || session.user.email}
-        </span>
+        </Link>
         <Button variant="outline" onClick={handleSignOut}>
           Déconnexion
         </Button>
