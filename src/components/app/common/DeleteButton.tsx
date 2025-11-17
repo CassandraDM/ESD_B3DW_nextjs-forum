@@ -10,6 +10,7 @@ interface DeleteButtonProps {
   id: string;
   onDelete: (id: string) => Promise<void>;
   queryKey: string;
+  size?: "default" | "sm" | "lg" | "icon";
 }
 
 export default function DeleteButton({
@@ -18,6 +19,7 @@ export default function DeleteButton({
   id,
   onDelete,
   queryKey,
+  size = "default",
 }: DeleteButtonProps) {
   const queryClient = useQueryClient();
 
@@ -42,8 +44,10 @@ export default function DeleteButton({
   return (
     <Button
       variant="destructive"
+      size={size}
       className={cn("bg-red-400", className)}
       onClick={handleDelete}
+      disabled={mutation.isPending}
     >
       <Trash />
     </Button>
