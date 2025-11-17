@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Pencil, X, Check } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import ConversationService from "@/services/conversation.service";
+import Link from "next/link";
 
 interface ConversationHeaderProps {
   conversation: {
@@ -91,9 +92,12 @@ export default function ConversationHeader({
         )}
       </div>
       {conversation?.author && (
-        <p className="text-sm text-muted-foreground">
+        <Link
+          href={`/users/${conversation.author.id}`}
+          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
           Par {conversation.author.name || conversation.author.email}
-        </p>
+        </Link>
       )}
       {isOwner && (
         <div className="absolute top-4 right-4 flex gap-2">

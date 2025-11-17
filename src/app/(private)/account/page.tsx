@@ -9,6 +9,11 @@ export default async function AccountPage() {
     redirect("/signin?callbackUrl=/account");
   }
 
+  // Rediriger vers la page de profil utilisateur
+  if (session.user?.id) {
+    redirect(`/users/${session.user.id}`);
+  }
+
   return (
     <div>
       <h1>Account page</h1>

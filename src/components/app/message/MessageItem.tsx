@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil, X, Check } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import Link from "next/link";
 
 interface MessageItemProps {
   message: Message & {
@@ -90,9 +91,12 @@ export default function MessageItem({ message }: MessageItemProps) {
       )}
       <div className="flex flex-col gap-2">
         {message.author && (
-          <p className="text-sm font-medium text-muted-foreground">
+          <Link
+            href={`/users/${message.author.id}`}
+            className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+          >
             {message.author.name || message.author.email}
-          </p>
+          </Link>
         )}
         {isEditing ? (
           <div className="flex flex-col gap-2">
