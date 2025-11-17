@@ -74,4 +74,88 @@ export async function isMessageOwner(
   }
 }
 
+/**
+ * Récupère le rôle d'un utilisateur
+ */
+export async function getUserRole(userId: string): Promise<string | null> {
+  try {
+    const { prisma } = await import("@/lib/prisma");
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    return user?.role || null;
+  } catch (error) {
+    console.error("Error getting user role:", error);
+    return null;
+  }
+}
+
+/**
+ * Vérifie si l'utilisateur est modérateur ou admin
+ */
+export async function isModeratorOrAdmin(userId: string): Promise<boolean> {
+  const role = await getUserRole(userId);
+  return role === "MODERATOR" || role === "ADMIN";
+}
+
+/**
+ * Vérifie si l'utilisateur est admin
+ */
+export async function isAdmin(userId: string): Promise<boolean> {
+  const role = await getUserRole(userId);
+  return role === "ADMIN";
+}
+
+/**
+ * Vérifie si l'utilisateur peut supprimer une conversation
+ * (propriétaire OU modérateur/admin)
+ */
+export async function canDeleteConversation(
+  conversationId: string,
+  userId: string
+): Promise<boolean> {
+  const isOwner = await isConversationOwner(conversationId, userId);
+  if (isOwner) return true;
+
+  return await isModeratorOrAdmin(userId);
+}
+
+/**
+ * Vérifie si l'utilisateur peut supprimer un message
+ * (propriétaire OU modérateur/admin)
+ */
+export async function canDeleteMessage(
+  messageId: string,
+  userId: string
+): Promise<boolean> {
+  const isOwner = await isMessageOwner(messageId, userId);
+  if (isOwner) return true;
+
+  return await isModeratorOrAdmin(userId);
+}
+
+/**
+ * Vérifie si l'utilisateur peut modifier une conversation
+ * (propriétaire uniquement)
+ */
+export async function canEditConversation(
+  conversationId: string,
+  userId: string
+): Promise<boolean> {
+  return await isConversationOwner(conversationId, userId);
+}
+
+/**
+ * Vérifie si l'utilisateur peut modifier un message
+ * (propriétaire uniquement)
+ */
+export async function canEditMessage(
+  messageId: string,
+  userId: string
+): Promise<boolean> {
+  return await isMessageOwner(messageId, userId);
+}
+
 

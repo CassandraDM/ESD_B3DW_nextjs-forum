@@ -8,6 +8,7 @@ interface Session {
     email: string;
     name?: string | null;
     image?: string | null;
+    role?: string;
   };
   authenticated: boolean;
 }
@@ -40,9 +41,10 @@ export function useSession() {
   const { data, isLoading } = useQuery({
     queryKey: ["session"],
     queryFn: fetchSession,
-    staleTime: 0, // Toujours considérer comme stale pour permettre le refetch immédiat
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 5, // Considérer comme fresh pendant 5 minutes
+    refetchOnMount: false, // Ne pas refetch à chaque mount
+    refetchOnWindowFocus: false, // Ne pas refetch au focus de la fenêtre
+    refetchOnReconnect: true, // Refetch seulement lors de la reconnexion
   });
 
   return {

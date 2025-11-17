@@ -8,6 +8,7 @@ import { useSession } from "@/hooks/useSession";
 import ConversationDeleteButton from "./ConversationDeleteButton";
 import { useState } from "react";
 import AuthDialog from "@/components/app/common/AuthDialog";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -26,7 +27,12 @@ export default function ConversationCard({
   isAuthenticated,
 }: ConversationCardProps) {
   const { session } = useSession();
+  const router = useRouter();
   const isOwner = session?.user?.id === conversation.authorId;
+  const isModeratorOrAdmin =
+    session?.user?.role === "MODERATOR" || session?.user?.role === "ADMIN";
+  const canEdit = isOwner; // Seul le propriétaire peut modifier
+  const canDelete = isOwner || isModeratorOrAdmin; // Propriétaire OU modérateur/admin peuvent supprimer
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(conversation.title || "");
@@ -49,13 +55,24 @@ export default function ConversationCard({
   });
 
   const handleCardClick = (e: React.MouseEvent) => {
+    // Ne pas naviguer si on clique sur le lien de l'auteur ou les boutons
+    const target = e.target as HTMLElement;
+    if (
+      target.closest("a") ||
+      target.closest("button") ||
+      target.closest('[role="button"]')
+    ) {
+      return;
+    }
+
     if (!isAuthenticated) {
-      e.preventDefault();
       setDialogOpen(true);
+      return;
     }
     if (isEditing) {
-      e.preventDefault();
+      return;
     }
+    router.push(`/conversations/${conversation.id}`);
   };
 
   const handleEdit = (e: React.MouseEvent) => {
@@ -107,9 +124,13 @@ export default function ConversationCard({
             <div>{conversation?.title}</div>
           )}
           {conversation?.author && (
-            <p className="text-sm text-muted-foreground">
+            <Link
+              href={`/users/${conversation.author.id}`}
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
               Par {conversation.author.name || conversation.author.email}
-            </p>
+            </Link>
           )}
         </div>
       </CardContent>
@@ -129,30 +150,30 @@ export default function ConversationCard({
   return (
     <>
       <div className="relative">
-        {isAuthenticated && !isEditing ? (
-          <Link href={`/conversations/${conversation.id}`}>{cardContent}</Link>
-        ) : (
-          <div>{cardContent}</div>
-        )}
-        {isAuthenticated && isOwner && (
+        <div onClick={handleCardClick}>{cardContent}</div>
+        {isAuthenticated && (canEdit || canDelete) && (
           <div
             className="absolute top-2 right-2 flex gap-2"
             onClick={(e) => e.stopPropagation()}
           >
             {!isEditing ? (
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleEdit}
-                  className="h-8 w-8 p-0"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <ConversationDeleteButton
-                  id={conversation.id}
-                  className="h-8 w-8 p-0"
-                />
+                {canEdit && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleEdit}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+                {canDelete && (
+                  <ConversationDeleteButton
+                    id={conversation.id}
+                    className="h-8 w-8 p-0"
+                  />
+                )}
               </>
             ) : (
               <>

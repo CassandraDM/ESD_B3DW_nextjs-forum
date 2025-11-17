@@ -239,7 +239,12 @@ export function AuthForm({ variant, callbackUrl = "/" }: AuthFormProps) {
               )}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Mot de passe</Label>
+                <Button variant="link" asChild className="p-0 h-auto text-xs">
+                  <Link href="/reset-password">Mot de passe oublié ?</Link>
+                </Button>
+              </div>
               <Input
                 id="password"
                 type="password"

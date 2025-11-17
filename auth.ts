@@ -61,6 +61,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             email: user.email,
             name: user.name,
             image: user.avatar || undefined,
+            role: user.role,
           };
         } catch (error) {
           console.error("Error in authorize:", error);
@@ -77,6 +78,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.email = user.email;
         token.name = user.name;
         token.picture = user.image;
+        token.role = (user as any).role;
       }
       return token;
     },
@@ -86,6 +88,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.email = token.email as string;
         session.user.name = token.name as string;
         session.user.image = token.picture as string | undefined;
+        (session.user as any).role = token.role as string;
       }
       return session;
     },

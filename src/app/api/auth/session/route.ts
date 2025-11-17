@@ -1,11 +1,31 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
     const session = await auth();
 
-    if (!session) {
+    if (!session || !session.user?.id) {
+      return NextResponse.json(
+        { session: null, authenticated: false },
+        { status: 200 }
+      );
+    }
+
+    // Récupérer les données utilisateur à jour depuis la base de données
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
       return NextResponse.json(
         { session: null, authenticated: false },
         { status: 200 }
@@ -16,10 +36,11 @@ export async function GET() {
       {
         session: {
           user: {
-            id: session.user.id,
-            email: session.user.email,
-            name: session.user.name,
-            image: session.user.image,
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.avatar || undefined,
+            role: user.role,
           },
         },
         authenticated: true,

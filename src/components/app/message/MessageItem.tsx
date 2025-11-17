@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil, X, Check } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import Link from "next/link";
 
 interface MessageItemProps {
   message: Message & {
@@ -25,6 +26,10 @@ interface MessageItemProps {
 export default function MessageItem({ message }: MessageItemProps) {
   const { session } = useSession();
   const isOwner = session?.user?.id === message.authorId;
+  const isModeratorOrAdmin =
+    session?.user?.role === "MODERATOR" || session?.user?.role === "ADMIN";
+  const canEdit = isOwner; // Seul le propriétaire peut modifier
+  const canDelete = isOwner || isModeratorOrAdmin; // Propriétaire OU modérateur/admin peuvent supprimer
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
   const queryClient = useQueryClient();
@@ -68,31 +73,38 @@ export default function MessageItem({ message }: MessageItemProps) {
 
   return (
     <div className="border shadow-sm rounded-md p-8 relative">
-      {isOwner && !isEditing && (
+      {(canEdit || canDelete) && !isEditing && (
         <div className="absolute top-2 right-2 flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleEdit}
-            className="h-8 w-8 p-0"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <DeleteButton
-            entityName="Message"
-            queryKey="messages"
-            onDelete={MessageService.deleteById}
-            id={message.id}
-            size="sm"
-            className="h-8 w-8 p-0"
-          />
+          {canEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleEdit}
+              className="h-8 w-8 p-0"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+          {canDelete && (
+            <DeleteButton
+              entityName="Message"
+              queryKey="messages"
+              onDelete={MessageService.deleteById}
+              id={message.id}
+              size="sm"
+              className="h-8 w-8 p-0"
+            />
+          )}
         </div>
       )}
       <div className="flex flex-col gap-2">
         {message.author && (
-          <p className="text-sm font-medium text-muted-foreground">
+          <Link
+            href={`/users/${message.author.id}`}
+            className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+          >
             {message.author.name || message.author.email}
-          </p>
+          </Link>
         )}
         {isEditing ? (
           <div className="flex flex-col gap-2">

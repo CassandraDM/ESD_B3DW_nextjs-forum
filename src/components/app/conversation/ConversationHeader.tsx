@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Pencil, X, Check } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import ConversationService from "@/services/conversation.service";
+import Link from "next/link";
 
 interface ConversationHeaderProps {
   conversation: {
@@ -29,6 +30,10 @@ export default function ConversationHeader({
 }: ConversationHeaderProps) {
   const { session } = useSession();
   const isOwner = session?.user?.id === conversation.authorId;
+  const isModeratorOrAdmin =
+    session?.user?.role === "MODERATOR" || session?.user?.role === "ADMIN";
+  const canEdit = isOwner; // Seul le propriétaire peut modifier
+  const canDelete = isOwner || isModeratorOrAdmin; // Propriétaire OU modérateur/admin peuvent supprimer
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(conversation.title || "");
   const queryClient = useQueryClient();
@@ -91,23 +96,30 @@ export default function ConversationHeader({
         )}
       </div>
       {conversation?.author && (
-        <p className="text-sm text-muted-foreground">
+        <Link
+          href={`/users/${conversation.author.id}`}
+          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
           Par {conversation.author.name || conversation.author.email}
-        </p>
+        </Link>
       )}
-      {isOwner && (
+      {(canEdit || canDelete) && (
         <div className="absolute top-4 right-4 flex gap-2">
           {!isEditing ? (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleEdit}
-                className="h-8 w-8 p-0"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <ConversationDeleteButton id={conversation.id} />
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEdit}
+                  className="h-8 w-8 p-0"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
+              {canDelete && (
+                <ConversationDeleteButton id={conversation.id} />
+              )}
             </>
           ) : (
             <>
