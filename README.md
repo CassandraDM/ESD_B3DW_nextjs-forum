@@ -132,9 +132,23 @@ Créer un fichier `.env.local` à la racine du projet :
 
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/forum?schema=public"
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="votre-secret-jwt-aleatoire"
+
+# Configuration Resend pour l'envoi d'emails
+RESEND_API_KEY="re_xxxxxxxxxxxxxxxxxxxxx"
+RESEND_FROM_EMAIL="noreply@votredomaine.com"
 ```
 
 > **Note :** Utilisez `.env.local` pour vos variables d'environnement locales. Ce fichier est automatiquement ignoré par Git et ne sera pas commité.
+
+**Configuration Resend :**
+
+1. Créez un compte sur [Resend](https://resend.com)
+2. Générez une clé API dans votre dashboard
+3. Ajoutez la clé API dans `RESEND_API_KEY`
+4. Configurez l'email d'expéditeur dans `RESEND_FROM_EMAIL` (doit être vérifié dans Resend)
+5. Pour le développement, vous pouvez utiliser `onboarding@resend.dev` comme email par défaut
 
 ### 4. Démarrer la base de données
 
