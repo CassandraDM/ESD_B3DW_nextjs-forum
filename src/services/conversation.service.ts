@@ -39,11 +39,27 @@ async function deleteById(id: string) {
   return response.json();
 }
 
+async function updateById(id: string, title: string) {
+  const response = await fetch(`/api/conversations/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ title }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to update conversation");
+  }
+  return response.json();
+}
+
 const ConversationService = {
   fetchConversations,
   fetchConversationById,
   createConversation,
   deleteById,
+  updateById,
 };
 
 export default ConversationService;
