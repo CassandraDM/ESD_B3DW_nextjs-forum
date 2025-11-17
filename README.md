@@ -128,11 +128,13 @@ npm install
 
 ### 3. Configuration de l'environnement
 
-Créer un fichier `.env` à la racine du projet :
+Créer un fichier `.env.local` à la racine du projet :
 
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/forum?schema=public"
 ```
+
+> **Note :** Utilisez `.env.local` pour vos variables d'environnement locales. Ce fichier est automatiquement ignoré par Git et ne sera pas commité.
 
 ### 4. Démarrer la base de données
 
@@ -152,19 +154,19 @@ Services disponibles :
 Créer les tables à partir du schéma Prisma :
 
 ```bash
-npx prisma db push
+npm run prisma:push
 ```
 
 Ou créer une migration :
 
 ```bash
-npx prisma migrate dev --name init
+npm run prisma:migrate -- --name init
 ```
 
 ### 6. Générer le client Prisma
 
 ```bash
-npx prisma generate
+npm run prisma:generate
 ```
 
 ### 7. Peupler la base de données (optionnel)
@@ -196,12 +198,15 @@ npm run lint         # Linter le code
 
 ### Prisma
 
+> **Note :** Utilisez les scripts npm ci-dessous qui chargent automatiquement `.env.local`. Si vous utilisez directement `npx prisma`, assurez-vous que `DATABASE_URL` est disponible.
+
 ```bash
-npx prisma studio              # Ouvrir l'interface graphique Prisma
-npx prisma db push             # Synchroniser le schéma sans migration
-npx prisma migrate dev         # Créer et appliquer une migration
-npx prisma migrate reset       # Réinitialiser la base de données
-npx prisma generate            # Générer le client Prisma
+npm run prisma:studio          # Ouvrir l'interface graphique Prisma
+npm run prisma:push            # Synchroniser le schéma sans migration
+npm run prisma:migrate         # Créer et appliquer une migration
+npm run prisma:reset           # Réinitialiser la base de données
+npm run prisma:generate        # Générer le client Prisma
+npm run prisma:validate        # Valider le schéma Prisma
 npm run seed                   # Peupler la base de données
 ```
 

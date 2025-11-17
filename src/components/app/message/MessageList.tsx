@@ -12,7 +12,7 @@ interface MessageListProps {
 
 export default function MessageList({ conversationId }: MessageListProps) {
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["messages"],
+    queryKey: ["messages", conversationId],
     queryFn: async () => {
       return await MessageService.fetchMessages({ conversationId });
     },
