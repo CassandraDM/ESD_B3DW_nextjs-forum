@@ -8,7 +8,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/useSession";
-import AuthAlert from "@/components/app/common/AuthAlert";
 import { useRouter } from "next/navigation";
 
 interface ConversationFormData {
@@ -18,7 +17,8 @@ interface ConversationFormData {
 export default function ConversationForm() {
   const { isAuthenticated, isLoading } = useSession();
   const router = useRouter();
-  const { register, handleSubmit, watch, reset } = useForm<ConversationFormData>();
+  const { register, handleSubmit, watch, reset } =
+    useForm<ConversationFormData>();
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -37,7 +37,9 @@ export default function ConversationForm() {
       }
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erreur lors de la création de la conversation");
+      toast.error(
+        error.message || "Erreur lors de la création de la conversation"
+      );
     },
   });
 
@@ -67,7 +69,6 @@ export default function ConversationForm() {
   if (!isAuthenticated) {
     return (
       <div className="mb-4">
-        <AuthAlert />
         <div className="relative">
           <Input
             type="text"
@@ -104,9 +105,7 @@ export default function ConversationForm() {
       <Button
         type="submit"
         className="absolute top-1/2 right-0 -translate-y-1/2 mr-2"
-        disabled={
-          !titleWatch || titleWatch.trim() === "" || mutation.isPending
-        }
+        disabled={!titleWatch || titleWatch.trim() === "" || mutation.isPending}
       >
         {mutation.isPending && <Spinner className="mr-2" />}
         Créer
@@ -114,4 +113,3 @@ export default function ConversationForm() {
     </form>
   );
 }
-
