@@ -30,6 +30,15 @@ export async function GET(request: NextRequest) {
       createdAt: "desc",
     },
     where: whereClause,
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
   });
 
   return NextResponse.json(messages);

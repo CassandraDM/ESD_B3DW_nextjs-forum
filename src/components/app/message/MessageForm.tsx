@@ -62,7 +62,7 @@ export default function MessageForm({ conversationId }: MessageFormProps) {
     return (
       <div className="my-5">
         <AuthAlert />
-        <div className="relative">
+        <div className="relative blur-sm">
           <Input
             type="text"
             placeholder="Type your message..."

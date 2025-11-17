@@ -69,7 +69,7 @@ export default function ConversationForm() {
   if (!isAuthenticated) {
     return (
       <div className="mb-4">
-        <div className="relative">
+        <div className="relative blur-sm">
           <Input
             type="text"
             placeholder="Titre de la nouvelle conversation..."
