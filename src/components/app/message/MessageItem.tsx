@@ -1,21 +1,35 @@
+"use client";
+
 import { Message } from "@/generated/prisma";
 import DeleteButton from "../common/DeleteButton";
 import MessageService from "@/services/message.service";
+import { useSession } from "@/hooks/useSession";
 
 interface MessageItemProps {
-  message: Message;
+  message: Message & {
+    author?: {
+      id: string;
+      name: string | null;
+      email: string;
+    } | null;
+  };
 }
 
 export default function MessageItem({ message }: MessageItemProps) {
+  const { session } = useSession();
+  const isOwner = session?.user?.id === message.authorId;
+
   return (
     <div className="border shadow-sm rounded-md p-8 relative">
-      <DeleteButton
-        className="absolute top-2 right-2"
-        entityName="Message"
-        queryKey="messages"
-        onDelete={MessageService.deleteById}
-        id={message.id}
-      />
+      {isOwner && (
+        <DeleteButton
+          className="absolute top-2 right-2"
+          entityName="Message"
+          queryKey="messages"
+          onDelete={MessageService.deleteById}
+          id={message.id}
+        />
+      )}
       {message.content}
     </div>
   );
