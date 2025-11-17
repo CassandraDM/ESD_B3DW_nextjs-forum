@@ -5,7 +5,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getRelativeTime } from "@/lib/date";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, FileText } from "lucide-react";
+import { MessageSquare, FileText, Pencil, X, Check } from "lucide-react";
+import { useSession } from "@/hooks/useSession";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Spinner } from "@/components/ui/spinner";
+import { useRouter } from "next/navigation";
 
 interface UserProfileProps {
   user: {
@@ -44,6 +54,74 @@ interface UserProfileProps {
 }
 
 export default function UserProfile({ user }: UserProfileProps) {
+  const { session } = useSession();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const isOwner = session?.user?.id === user.id;
+  const [isEditing, setIsEditing] = useState(false);
+
+  const form = useForm({
+    defaultValues: {
+      name: user.name || "",
+      bio: user.bio || "",
+      avatar: user.avatar || "",
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: { name: string; bio: string; avatar: string }) => {
+      const response = await fetch(`/api/users/${user.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: data.name || null,
+          bio: data.bio || null,
+          avatar: data.avatar || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Erreur lors de la mise à jour");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("Profil mis à jour avec succès !");
+      setIsEditing(false);
+      queryClient.invalidateQueries({ queryKey: ["user", user.id] });
+      router.refresh();
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erreur lors de la mise à jour du profil");
+    },
+  });
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    form.reset({
+      name: user.name || "",
+      bio: user.bio || "",
+      avatar: user.avatar || "",
+    });
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    form.reset({
+      name: user.name || "",
+      bio: user.bio || "",
+      avatar: user.avatar || "",
+    });
+  };
+
+  const handleSubmit = (data: { name: string; bio: string; avatar: string }) => {
+    updateMutation.mutate(data);
+  };
+
   const getInitials = (name: string | null, email: string) => {
     if (name) {
       return name
@@ -67,24 +145,105 @@ export default function UserProfile({ user }: UserProfileProps) {
       {/* Profil utilisateur */}
       <Card className="mb-8">
         <CardHeader>
-          <div className="flex items-center gap-4">
+          <div className="flex items-start gap-4 relative">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={user.avatar || undefined} alt={user.name || user.email} />
+              <AvatarImage
+                src={
+                  isEditing && form.watch("avatar")
+                    ? form.watch("avatar")
+                    : user.avatar || undefined
+                }
+                alt={user.name || user.email}
+              />
               <AvatarFallback className="text-2xl">
-                {getInitials(user.name, user.email)}
+                {getInitials(
+                  isEditing && form.watch("name")
+                    ? form.watch("name")
+                    : user.name,
+                  user.email
+                )}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <CardTitle className="text-2xl">
-                {user.name || user.email}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
-              {user.bio && (
-                <p className="text-sm text-muted-foreground mt-2">{user.bio}</p>
+              {isEditing ? (
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nom</Label>
+                    <Input
+                      id="name"
+                      {...form.register("name")}
+                      placeholder="Votre nom"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="avatar">URL de l'avatar</Label>
+                    <Input
+                      id="avatar"
+                      {...form.register("avatar")}
+                      placeholder="https://example.com/avatar.jpg"
+                      type="url"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea
+                      id="bio"
+                      {...form.register("bio")}
+                      placeholder="Décrivez-vous en quelques mots..."
+                      rows={3}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="submit"
+                      disabled={updateMutation.isPending}
+                      size="sm"
+                    >
+                      {updateMutation.isPending ? (
+                        <Spinner className="h-4 w-4 mr-2" />
+                      ) : (
+                        <Check className="h-4 w-4 mr-2" />
+                      )}
+                      Enregistrer
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleCancel}
+                      disabled={updateMutation.isPending}
+                      size="sm"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Annuler
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-2xl">
+                      {user.name || user.email}
+                    </CardTitle>
+                    {isOwner && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleEdit}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
+                  {user.bio && (
+                    <p className="text-sm text-muted-foreground mt-2">{user.bio}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Membre depuis {getRelativeTime(user.createdAt)}
+                  </p>
+                </>
               )}
-              <p className="text-xs text-muted-foreground mt-2">
-                Membre depuis {getRelativeTime(user.createdAt)}
-              </p>
             </div>
           </div>
         </CardHeader>
