@@ -14,7 +14,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { useForm } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -37,6 +37,7 @@ interface SignInFormData {
 
 export function AuthForm({ variant, callbackUrl = "/" }: AuthFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const isSignUp = variant === "signup";
 
   const signUpForm = useForm<SignUpFormData>();
@@ -71,6 +72,7 @@ export function AuthForm({ variant, callbackUrl = "/" }: AuthFormProps) {
       const response = await fetch("/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // Inclure les cookies
         body: JSON.stringify(data),
       });
 
@@ -81,8 +83,14 @@ export function AuthForm({ variant, callbackUrl = "/" }: AuthFormProps) {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Connexion réussie !");
+      // Attendre un peu pour que le cookie soit défini
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Invalider la query de session pour forcer le refetch
+      queryClient.invalidateQueries({ queryKey: ["session"] });
+      // Attendre encore un peu pour que le refetch se termine
+      await new Promise((resolve) => setTimeout(resolve, 200));
       router.push(callbackUrl);
       router.refresh();
     },

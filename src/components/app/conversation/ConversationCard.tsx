@@ -5,10 +5,12 @@ import Link from "next/link";
 
 interface ConversationCardProps {
   conversation: ConversationWithExtend;
+  isAuthenticated: boolean;
 }
 
 export default function ConversationCard({
   conversation,
+  isAuthenticated,
 }: ConversationCardProps) {
   return (
     <Link href={`/conversations/${conversation.id}`}>
