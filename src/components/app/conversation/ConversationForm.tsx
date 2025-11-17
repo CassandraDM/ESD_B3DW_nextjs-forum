@@ -8,7 +8,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/useSession";
-import { useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 import { Info } from "lucide-react";
@@ -19,7 +18,6 @@ interface ConversationFormData {
 
 export default function ConversationForm() {
   const { isAuthenticated, isLoading } = useSession();
-  const router = useRouter();
   const { register, handleSubmit, watch, reset } =
     useForm<ConversationFormData>();
   const queryClient = useQueryClient();
@@ -34,10 +32,6 @@ export default function ConversationForm() {
       toast.success("Conversation créée avec succès !");
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
-      // Rediriger vers la nouvelle conversation
-      if (conversation?.id) {
-        router.push(`/conversations/${conversation.id}`);
-      }
     },
     onError: (error: Error) => {
       toast.error(

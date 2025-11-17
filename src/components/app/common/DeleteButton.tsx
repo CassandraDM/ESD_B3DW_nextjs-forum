@@ -28,6 +28,10 @@ export default function DeleteButton({
     onSuccess: () => {
       toast.success(`${entityName} deleted successfully!`);
       queryClient.invalidateQueries({ queryKey: [queryKey] });
+      // Si on supprime un message, invalider aussi les conversations pour mettre à jour le nombre de messages
+      if (queryKey === "messages") {
+        queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      }
     },
   });
 

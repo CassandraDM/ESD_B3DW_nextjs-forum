@@ -1,35 +1,23 @@
 "use client";
 
 import ConversationService from "@/services/conversation.service";
-import { useEffect, useState } from "react";
 import ConversationCard from "./ConversationCard";
 import ConversationSkeleton from "./ConversationSkeleton";
 import { ConversationWithExtend } from "@/types/conversation.type";
 import { useSession } from "@/hooks/useSession";
+import { useQuery } from "@tanstack/react-query";
 
 export default function ConversationList() {
-  const [conversations, setConversations] = useState<ConversationWithExtend[]>(
-    []
-  );
-  const [isLoadingConversations, setIsLoadingConversations] = useState(false);
   const { isAuthenticated, isLoading } = useSession();
 
-  useEffect(() => {
-    getAllConversations();
-  }, []);
-
-  const getAllConversations = async () => {
-    setIsLoadingConversations(true);
-    try {
-      const data = await ConversationService.fetchConversations();
-      setConversations(data);
-    } catch (error) {
-      console.error("Error fetching conversations:", error);
-      setConversations([]);
-    } finally {
-      setIsLoadingConversations(false);
-    }
-  };
+  const { data: conversations, isLoading: isLoadingConversations } = useQuery<
+    ConversationWithExtend[]
+  >({
+    queryKey: ["conversations"],
+    queryFn: async () => {
+      return await ConversationService.fetchConversations();
+    },
+  });
 
   if (isLoading) {
     return (
@@ -52,7 +40,7 @@ export default function ConversationList() {
               <ConversationSkeleton key={i} />
             ))}
           </div>
-        ) : conversations.length === 0 ? (
+        ) : !conversations || conversations.length === 0 ? (
           <p className="text-center text-muted-foreground">
             Aucune conversation disponible.
           </p>
@@ -80,7 +68,7 @@ export default function ConversationList() {
             <ConversationSkeleton key={i} />
           ))}
         </div>
-      ) : conversations.length === 0 ? (
+      ) : !conversations || conversations.length === 0 ? (
         <p>Aucune conversation disponible.</p>
       ) : (
         <div className="flex flex-col gap-4">

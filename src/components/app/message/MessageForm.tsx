@@ -30,8 +30,10 @@ export default function MessageForm({ conversationId }: MessageFormProps) {
     onSuccess: () => {
       reset();
       toast.success("Message sent successfully!");
-      // Invalidate and refetch
+      // Invalidate and refetch - invalider toutes les queries messages (avec ou sans conversationId)
       queryClient.invalidateQueries({ queryKey: ["messages"] });
+      // Invalider aussi les conversations pour mettre à jour le nombre de messages
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
 
