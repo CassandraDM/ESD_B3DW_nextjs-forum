@@ -21,10 +21,11 @@ export default auth((req) => {
 
   // Routes protégées (nécessitent une authentification)
   // - /account : Page de profil utilisateur
+  // - /admin : Routes admin (vérification du rôle dans les pages)
   // Note: Les route groups (private) ne sont pas dans l'URL, donc /account est directement accessible
   // Note: La protection des routes API (POST /api/conversations, POST /api/messages)
   // sera gérée directement dans les route handlers (voir étape 3 du README)
-  const protectedRoutes = ["/account"];
+  const protectedRoutes = ["/account", "/admin"];
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );

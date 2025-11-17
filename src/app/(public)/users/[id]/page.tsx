@@ -1,5 +1,6 @@
 import UserProfile from "@/components/app/user/UserProfile";
 import { notFound } from "next/navigation";
+import Header from "@/components/app/common/Header";
 
 interface UserProfilePageProps {
   params: Promise<{ id: string }>;
@@ -38,6 +39,11 @@ export default async function UserProfilePage({
     notFound();
   }
 
-  return <UserProfile user={user} />;
+  return (
+    <>
+      <Header />
+      <UserProfile user={user} />
+    </>
+  );
 }
 

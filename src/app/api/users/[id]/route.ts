@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { getSession, requireAuth } from "@/lib/auth-utils";
+import {
+  getSession,
+  requireAuth,
+  isAdmin,
+} from "@/lib/auth-utils";
 
 export async function GET(
   request: Request,
@@ -18,6 +22,7 @@ export async function GET(
         name: true,
         avatar: true,
         bio: true,
+        role: true,
         createdAt: true,
         conversations: {
           where: {
@@ -175,6 +180,96 @@ export async function PATCH(
     }
     return NextResponse.json(
       { error: "Erreur lors de la mise à jour du profil" },
+      { status: 500 }
+    );
+  }
+}
+
+// Route pour changer le rôle d'un utilisateur (admin seulement)
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const authError = await requireAuth();
+    if (authError) {
+      return authError;
+    }
+
+    const session = await getSession();
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: "Non authentifié" },
+        { status: 401 }
+      );
+    }
+
+    // Vérifier que l'utilisateur est admin
+    const userIsAdmin = await isAdmin(session.user.id);
+    if (!userIsAdmin) {
+      return NextResponse.json(
+        { error: "Seuls les administrateurs peuvent modifier les rôles" },
+        { status: 403 }
+      );
+    }
+
+    const { id } = await params;
+    const body = await request.json();
+    const { role } = body;
+
+    // Empêcher un admin de modifier son propre rôle
+    if (session.user.id === id) {
+      return NextResponse.json(
+        { error: "Vous ne pouvez pas modifier votre propre rôle" },
+        { status: 403 }
+      );
+    }
+
+    // Validation du rôle
+    const validRoles = ["USER", "MODERATOR", "ADMIN"];
+    if (!role || !validRoles.includes(role)) {
+      return NextResponse.json(
+        { error: "Rôle invalide. Rôles valides: USER, MODERATOR, ADMIN" },
+        { status: 400 }
+      );
+    }
+
+    // Vérifier que l'utilisateur existe
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Utilisateur non trouvé" },
+        { status: 404 }
+      );
+    }
+
+    // Mettre à jour le rôle
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
+      data: { role },
+    });
+
+    return NextResponse.json(updatedUser);
+  } catch (error: any) {
+    console.error("Error updating user role:", error);
+    if (error.code === "P2025") {
+      return NextResponse.json(
+        { error: "Utilisateur non trouvé" },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Erreur lors de la mise à jour du rôle" },
       { status: 500 }
     );
   }

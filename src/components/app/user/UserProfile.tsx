@@ -5,7 +5,23 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getRelativeTime } from "@/lib/date";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, FileText, Pencil, X, Check } from "lucide-react";
+import {
+  MessageSquare,
+  FileText,
+  Pencil,
+  X,
+  Check,
+  Shield,
+  ShieldCheck,
+  User as UserIcon,
+} from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useSession } from "@/hooks/useSession";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -24,6 +40,7 @@ interface UserProfileProps {
     name: string | null;
     avatar: string | null;
     bio: string | null;
+    role: string;
     createdAt: string;
     conversations: Array<{
       id: string;
@@ -58,6 +75,7 @@ export default function UserProfile({ user }: UserProfileProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const isOwner = session?.user?.id === user.id;
+  const isAdmin = session?.user?.role === "ADMIN";
   const [isEditing, setIsEditing] = useState(false);
 
   const form = useForm({
@@ -89,10 +107,12 @@ export default function UserProfile({ user }: UserProfileProps) {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Profil mis à jour avec succès !");
       setIsEditing(false);
       queryClient.invalidateQueries({ queryKey: ["user", user.id] });
+      // Forcer le refetch de la session pour mettre à jour le header
+      await queryClient.refetchQueries({ queryKey: ["session"] });
       router.refresh();
     },
     onError: (error: Error) => {
@@ -122,6 +142,72 @@ export default function UserProfile({ user }: UserProfileProps) {
     updateMutation.mutate(data);
   };
 
+  const roleUpdateMutation = useMutation({
+    mutationFn: async (role: string) => {
+      const response = await fetch(`/api/users/${user.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ role }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Erreur lors de la mise à jour du rôle");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("Rôle mis à jour avec succès !");
+      queryClient.invalidateQueries({ queryKey: ["user", user.id] });
+      router.refresh();
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erreur lors de la mise à jour du rôle");
+    },
+  });
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "ADMIN":
+        return "Administrateur";
+      case "MODERATOR":
+        return "Modérateur";
+      case "USER":
+        return "Utilisateur";
+      default:
+        return role;
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case "ADMIN":
+        return <ShieldCheck className="h-4 w-4" />;
+      case "MODERATOR":
+        return <Shield className="h-4 w-4" />;
+      case "USER":
+        return <UserIcon className="h-4 w-4" />;
+      default:
+        return null;
+    }
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case "ADMIN":
+        return "bg-red-500/10 text-red-500 border-red-500/20";
+      case "MODERATOR":
+        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+      case "USER":
+        return "bg-gray-500/10 text-gray-500 border-gray-500/20";
+      default:
+        return "bg-gray-500/10 text-gray-500 border-gray-500/20";
+    }
+  };
+
   const getInitials = (name: string | null, email: string) => {
     if (name) {
       return name
@@ -135,7 +221,7 @@ export default function UserProfile({ user }: UserProfileProps) {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 px-4">
       <div className="mb-6">
         <Link href="/">
           <Button variant="link">&larr; Retour à l'accueil</Button>
@@ -145,7 +231,7 @@ export default function UserProfile({ user }: UserProfileProps) {
       {/* Profil utilisateur */}
       <Card className="mb-8">
         <CardHeader>
-          <div className="flex items-start gap-4 relative">
+          <div className="flex items-center gap-4 relative">
             <Avatar className="h-20 w-20">
               <AvatarImage
                 src={
@@ -236,6 +322,32 @@ export default function UserProfile({ user }: UserProfileProps) {
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border ${getRoleColor(
+                        user.role
+                      )}`}
+                    >
+                      {getRoleIcon(user.role)}
+                      {getRoleLabel(user.role)}
+                    </span>
+                    {isAdmin && !isOwner && (
+                      <Select
+                        value={user.role}
+                        onValueChange={(value) => roleUpdateMutation.mutate(value)}
+                        disabled={roleUpdateMutation.isPending}
+                      >
+                        <SelectTrigger className="h-7 w-32 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="USER">Utilisateur</SelectItem>
+                          <SelectItem value="MODERATOR">Modérateur</SelectItem>
+                          <SelectItem value="ADMIN">Administrateur</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
                   {user.bio && (
                     <p className="text-sm text-muted-foreground mt-2">{user.bio}</p>
                   )}
