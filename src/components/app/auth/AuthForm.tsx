@@ -14,10 +14,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { useForm } from "react-hook-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
+import { Github, Google, Discord } from "react-bootstrap-icons";
 
 interface AuthFormProps {
   variant: "signup" | "signin";
@@ -42,6 +43,26 @@ export function AuthForm({ variant, callbackUrl = "/" }: AuthFormProps) {
 
   const signUpForm = useForm<SignUpFormData>();
   const signInForm = useForm<SignInFormData>();
+
+  // Vérifier quels providers OAuth sont disponibles
+  const { data: availableProviders, isLoading: isLoadingProviders } = useQuery<{
+    google: boolean;
+    github: boolean;
+    discord: boolean;
+  }>({
+    queryKey: ["oauth-providers"],
+    queryFn: async () => {
+      const response = await fetch("/api/auth/providers");
+      if (!response.ok) {
+        console.warn("[OAuth] Erreur lors de la récupération des providers");
+        return { google: false, github: false, discord: false };
+      }
+      const data = await response.json();
+      console.log("[OAuth] Providers disponibles:", data);
+      return data;
+    },
+    staleTime: 1000 * 60 * 5, // Cache pendant 5 minutes
+  });
 
   const signUpMutation = useMutation({
     mutationFn: async (data: SignUpFormData) => {
@@ -78,7 +99,7 @@ export function AuthForm({ variant, callbackUrl = "/" }: AuthFormProps) {
         `next-auth.csrf-token`,
         `next-auth.callback-url`,
       ];
-      
+
       cookiesToDelete.forEach((cookieName) => {
         // Supprimer avec différents chemins et domaines possibles
         document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
@@ -122,6 +143,32 @@ export function AuthForm({ variant, callbackUrl = "/" }: AuthFormProps) {
 
   const onSubmitSignIn = async (data: SignInFormData) => {
     signInMutation.mutate(data);
+  };
+
+  const handleOAuthSignIn = async (
+    provider: "google" | "github" | "discord"
+  ) => {
+    console.log(`[OAuth] Clic sur ${provider}`);
+    try {
+      // Utiliser l'API NextAuth pour déclencher le OAuth signin
+      const response = await fetch("/api/auth/oauth-signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider, callbackUrl }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la connexion OAuth");
+      }
+
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error("[OAuth] Erreur lors de la redirection:", error);
+      toast.error("Erreur lors de la connexion");
+    }
   };
 
   if (isSignUp) {
@@ -287,7 +334,7 @@ export function AuthForm({ variant, callbackUrl = "/" }: AuthFormProps) {
           <Link href="/signup">S'inscrire</Link>
         </Button>
       </div>
-      <CardFooter className="flex-col gap-2">
+      <CardFooter className="flex-col gap-3">
         <Button
           type="submit"
           className="w-full"
@@ -297,6 +344,55 @@ export function AuthForm({ variant, callbackUrl = "/" }: AuthFormProps) {
           {signInMutation.isPending && <Spinner className="mr-2" />}
           Se connecter
         </Button>
+        {(availableProviders?.google ||
+          availableProviders?.github ||
+          availableProviders?.discord) && (
+          <div className="w-full flex flex-col gap-2">
+            <p className="text-xs text-center text-muted-foreground">
+              Ou continuer avec
+            </p>
+            <div className="flex flex-col gap-2">
+              {availableProviders?.google && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log("[OAuth] Bouton Google cliqué");
+                    handleOAuthSignIn("google");
+                  }}
+                >
+                  <Google className="w-4 h-4" />
+                  Google
+                </Button>
+              )}
+              {availableProviders?.github && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2"
+                  onClick={() => handleOAuthSignIn("github")}
+                >
+                  <Github className="w-4 h-4" />
+                  GitHub
+                </Button>
+              )}
+              {availableProviders?.discord && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2"
+                  onClick={() => handleOAuthSignIn("discord")}
+                >
+                  <Discord className="w-4 h-4" />
+                  Discord
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       </CardFooter>
     </Card>
   );
