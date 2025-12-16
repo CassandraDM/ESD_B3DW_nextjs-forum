@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { signIn } from "../../../../../auth";
+import { signIn, signOut } from "../../../../../auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +12,14 @@ export async function POST(request: NextRequest) {
         { error: "Email et mot de passe requis" },
         { status: 400 }
       );
+    }
+
+    // Nettoyer toute session existante avant de créer une nouvelle
+    // pour éviter l'accumulation de cookies
+    try {
+      await signOut({ redirect: false });
+    } catch (error) {
+      // Ignorer si pas de session active
     }
 
     // Attempt to sign in using NextAuth
@@ -30,13 +38,27 @@ export async function POST(request: NextRequest) {
     }
 
     // If we get here, sign in was successful
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         message: "Connexion réussie",
         success: true,
       },
       { status: 200 }
     );
+
+    // Nettoyer les anciens cookies pour éviter l'accumulation
+    const cookiePrefix = process.env.NODE_ENV === "production" ? "__Secure-" : "";
+    const cookiesToDelete = [
+      `${cookiePrefix}next-auth.csrf-token`,
+      `next-auth.csrf-token`,
+      `next-auth.callback-url`,
+    ];
+    
+    cookiesToDelete.forEach((cookieName) => {
+      response.cookies.delete(cookieName);
+    });
+
+    return response;
   } catch (error) {
     console.error("Error in signin:", error);
     return NextResponse.json(

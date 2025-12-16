@@ -49,7 +49,10 @@ export async function POST(request: NextRequest) {
     } catch (dbError: any) {
       console.error("Error updating user with reset token:", dbError);
       // Si les champs n'existent pas dans la base de données, on doit exécuter la migration
-      if (dbError.code === "P2025" || dbError.message?.includes("Unknown arg")) {
+      if (
+        dbError.code === "P2025" ||
+        dbError.message?.includes("Unknown arg")
+      ) {
         return NextResponse.json(
           {
             error:
@@ -71,7 +74,9 @@ export async function POST(request: NextRequest) {
       if (!process.env.RESEND_API_KEY) {
         console.log("🔗 MODE DÉVELOPPEMENT - Lien de réinitialisation:");
         console.log(
-          `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/reset-password/${resetToken}`
+          `${
+            process.env.NEXTAUTH_URL || "http://localhost:3000"
+          }/reset-password/${resetToken}`
         );
       }
       // Ne pas révéler l'erreur à l'utilisateur pour des raisons de sécurité
@@ -83,7 +88,9 @@ export async function POST(request: NextRequest) {
           // En mode développement, on peut retourner le lien dans la réponse
           ...(process.env.NODE_ENV === "development" &&
             !process.env.RESEND_API_KEY && {
-              devResetLink: `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/reset-password/${resetToken}`,
+              devResetLink: `${
+                process.env.NEXTAUTH_URL || "http://localhost:3000"
+              }/reset-password/${resetToken}`,
             }),
         },
         { status: 200 }
@@ -97,7 +104,9 @@ export async function POST(request: NextRequest) {
         // En mode développement sans Resend, retourner le lien
         ...(process.env.NODE_ENV === "development" &&
           !process.env.RESEND_API_KEY && {
-            devResetLink: `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/reset-password/${resetToken}`,
+            devResetLink: `${
+              process.env.NEXTAUTH_URL || "http://localhost:3000"
+            }/reset-password/${resetToken}`,
           }),
       },
       { status: 200 }
@@ -110,4 +119,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

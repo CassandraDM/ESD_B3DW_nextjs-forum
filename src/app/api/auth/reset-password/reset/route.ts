@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
+import { signOut } from "../../../../../../auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,6 +51,15 @@ export async function POST(request: NextRequest) {
         resetPasswordExpires: null,
       },
     });
+
+    // Nettoyer toute session existante pour cet utilisateur
+    // pour éviter l'accumulation de cookies et forcer une nouvelle connexion
+    try {
+      await signOut({ redirect: false });
+    } catch (error) {
+      // Ignorer les erreurs de signOut si l'utilisateur n'est pas connecté
+      // C'est normal si l'utilisateur n'avait pas de session active
+    }
 
     return NextResponse.json(
       { message: "Mot de passe réinitialisé avec succès" },
