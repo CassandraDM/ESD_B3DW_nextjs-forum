@@ -2,12 +2,11 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 jours
   },
   pages: {
     signIn: "/signin",
@@ -56,11 +55,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
 
           // Return user object (will be stored in JWT)
+          // Ne pas stocker l'image dans le JWT pour réduire la taille
+          // On la récupérera depuis la DB si nécessaire
           return {
             id: user.id,
             email: user.email,
             name: user.name,
-            image: user.avatar || undefined,
             role: user.role,
           };
         } catch (error) {
@@ -77,7 +77,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.picture = user.image;
+        // Ne pas stocker l'image dans le JWT pour réduire la taille
         token.role = (user as any).role;
       }
       return token;
@@ -87,7 +87,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
-        session.user.image = token.picture as string | undefined;
+        // L'image sera récupérée depuis la DB via l'API session si nécessaire
         (session.user as any).role = token.role as string;
       }
       return session;

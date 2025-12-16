@@ -69,6 +69,23 @@ export function AuthForm({ variant, callbackUrl = "/" }: AuthFormProps) {
 
   const signInMutation = useMutation({
     mutationFn: async (data: SignInFormData) => {
+      // Nettoyer les anciens cookies NextAuth avant la connexion
+      // pour éviter l'accumulation qui cause l'erreur 431
+      const cookiesToDelete = [
+        `__Secure-next-auth.session-token`,
+        `next-auth.session-token`,
+        `__Secure-next-auth.csrf-token`,
+        `next-auth.csrf-token`,
+        `next-auth.callback-url`,
+      ];
+      
+      cookiesToDelete.forEach((cookieName) => {
+        // Supprimer avec différents chemins et domaines possibles
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
+      });
+
       const response = await fetch("/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
